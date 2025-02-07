@@ -8,85 +8,58 @@
 import SwiftUI
 
 struct ContentView: View {
-    let animals = Animal.allCases
-
     @State private var isVisible = false
     @State private var scrollID: Int?
     @State private var backgroundName = Animal.lemur.imageName
 
+    private let animals = Animal.allCases
+
     var body: some View {
-        ZStack {
-            Image(backgroundName)
-                .resizable()
-                .ignoresSafeArea()
-            ScrollView {
-                if !isVisible {
-                    Color.clear
-                }
-                VStack(spacing: 32) {
-                    if isVisible {
-                        cardsView
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    } else {
-                        EmptyView()
-                            .frame(height: 320)
+        Image(backgroundName)
+            .resizable()
+            .ignoresSafeArea()
+            .overlay {
+                ScrollView {
+                    if !isVisible {
+                        Color.clear
                     }
-                    if isVisible {
-                        titlesView
-                            .transition(.opacity.combined(with: .offset(y: -30)))
+                    VStack(spacing: 32) {
+                        if isVisible {
+                            cardsView
+                        } else {
+                            placeholderCardsView
+                        }
+                        if isVisible {
+                            titlesView
+                        }
+                    }
+                    .padding(.vertical, 32)
+                }
+                .clipped()
+                /// Trick to dark blur the background
+                .background(.regularMaterial)
+            }
+            .onChange(of: scrollID, initial: false) { _, newValue in
+                /// Update the image background according to the scrollview offset.
+                if let scrollID = newValue {
+                    withAnimation {
+                        backgroundName = animals[scrollID % animals.count].imageName
                     }
                 }
-                .padding(.vertical, 32)
             }
-            .clipped()
-            .background(.regularMaterial)
-        }
-        .onChange(of: scrollID, initial: false) { _, newValue in
-            if let scrollID = newValue {
-                withAnimation {
-                    backgroundName = animals[scrollID % animals.count].imageName
+            .onAppear {
+                /// Defer UI elements apparition
+                withAnimation(.interpolatingSpring(duration: 1).delay(1)) {
+                    isVisible = true
                 }
             }
-        }
-        .onAppear {
-            withAnimation(.interpolatingSpring(duration: 1).delay(1)) {
-                isVisible = true
-            }
-        }
     }
+}
 
-    var titlesView: some View {
-        VStack(spacing: 8) {
-            Text("Welcome to")
-                .bold()
-                .foregroundStyle(.white.opacity(0.5))
+// MARK: - Subviews
 
-            Text("Apple Invites")
-                .font(.system(size: 40, weight: .bold, design: .default))
-                .bold()
-                .foregroundStyle(.white)
-
-            Text("Create beautiful invitations for all your events. Anyone can receive invitations. Sending included with iCloud+")
-                .font(.callout)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.white.opacity(0.5))
-
-            Button {
-
-            } label: {
-                Text("Create an Event")
-                    .fontWeight(.medium)
-                    .padding(.vertical)
-                    .padding(.horizontal, 32)
-                    .background(Color.white)
-                    .foregroundStyle(.black)
-                    .clipShape(Capsule())
-            }
-            .padding(.vertical, 40)
-        }
-        .padding(.horizontal)
-    }
-
+private extension ContentView {
+    /// Horizontal cards
     var cardsView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 16) {
@@ -113,8 +86,51 @@ struct ContentView: View {
         .scrollClipDisabled()
         .scrollPosition(id: $scrollID)
         .safeAreaPadding(.horizontal, 20.0)
+        .transition(.opacity.combined(with: .move(edge: .top)))
+    }
+
+    /// Placeholder to hold cards size
+    var placeholderCardsView: some View {
+        EmptyView()
+            .frame(height: 320)
+    }
+
+    /// Titles with action button
+    var titlesView: some View {
+        VStack(spacing: 8) {
+            Text("Welcome to")
+                .bold()
+                .foregroundStyle(.white.opacity(0.5))
+
+            Text("Animal Invites")
+                .font(.system(size: 40, weight: .bold))
+                .bold()
+                .foregroundStyle(.white)
+
+            Text("Create beautiful invitations for all your events. Anyone can receive invitations. Sending included with Animal+")
+                .font(.callout)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.white.opacity(0.5))
+
+            Button {
+                print("create an event")
+            } label: {
+                Text("Create an Event")
+                    .fontWeight(.medium)
+                    .padding(.vertical)
+                    .padding(.horizontal, 32)
+                    .background(Color.white)
+                    .foregroundStyle(.black)
+                    .clipShape(Capsule())
+            }
+            .padding(.vertical, 40)
+        }
+        .padding()
+        .transition(.opacity.combined(with: .offset(y: -30)))
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     ContentView()
