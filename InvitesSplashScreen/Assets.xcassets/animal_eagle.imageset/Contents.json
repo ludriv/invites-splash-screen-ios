@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "animal_eagle.jpg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
