@@ -2,57 +2,107 @@
 //  ContentView.swift
 //  InvitesSplashScreen
 //
-//  Created by Ludovic Riviere on 07/02/2025.
+//  Created by Ludovic R. on 07/02/2025.
 //
 
 import SwiftUI
 
+/// Jump to ✨ marks to see tips & tricks
 struct ContentView: View {
-    @State private var isVisible = false
-    @State private var scrollID: Int?
-    @State private var backgroundName = Animal.lemur.imageName
+
+    @State private var isCardsVisible = false
+    @State private var isTitleVisible = false
+    @State private var isTextsVisible = false
+
+    @State private var animalsArray: [[Animal]] = []
+    @State private var scrollID: Int? = 0
+    @State private var backgroundAnimal: Animal = .parrot
 
     private let animals = Animal.allCases
+    private let animationDuration: TimeInterval = 1
 
     var body: some View {
-        Image(backgroundName)
-            .resizable()
-            .ignoresSafeArea()
-            .overlay {
-                ScrollView {
-                    if !isVisible {
-                        Color.clear
+        TabView(selection: $backgroundAnimal) {
+            ForEach(animals, id: \.self) { animal in
+                Image(animal.imageName)
+                    .resizable()
+                    .ignoresSafeArea()
+                    .tag(animal)
+            }
+        }
+        .toolbar(.hidden, for: .tabBar)
+        .ignoresSafeArea()
+        .overlay {
+            ScrollView {
+                if !isCardsVisible {
+                    Color.clear
+                }
+                VStack(spacing: 32) {
+                    if isCardsVisible {
+                        cardsView
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    } else {
+                        placeholderCardsView
                     }
-                    VStack(spacing: 32) {
-                        if isVisible {
-                            cardsView
+
+                    VStack(spacing: 8) {
+                        if isTextsVisible {
+                            welcomeToText
+                                .transition(.opacity.combined(with: .offset(y: -30)))
+                        }
+
+                        if isTitleVisible {
+                            // ✨ Apple like title transition
+                            Text("Animal Invites")
+                                .customAttribute(EmphasisAttribute())
+                                .font(.system(size: 40, weight: .bold))
+                                .foregroundStyle(.white)
+                                .transition(TextTransition(duration: animationDuration))
                         } else {
-                            placeholderCardsView
+                            Text("")
+                                .font(.system(size: 40, weight: .bold))
+                                .opacity(0)
                         }
-                        if isVisible {
-                            titlesView
+
+                        if isTextsVisible {
+                            descriptionText
+                                .transition(.opacity.combined(with: .offset(y: -30)))
+                            createEventButton
+                                .transition(.opacity.combined(with: .offset(y: -40)))
                         }
                     }
-                    .padding(.vertical, 32)
+                    .padding()
                 }
-                .clipped()
-                /// Trick to dark blur the background
-                .background(.regularMaterial)
+                .padding(.vertical, 32)
             }
-            .onChange(of: scrollID, initial: false) { _, newValue in
-                /// Update the image background according to the scrollview offset.
-                if let scrollID = newValue {
-                    withAnimation {
-                        backgroundName = animals[scrollID % animals.count].imageName
-                    }
-                }
-            }
-            .onAppear {
-                /// Defer UI elements apparition
-                withAnimation(.interpolatingSpring(duration: 1).delay(1)) {
-                    isVisible = true
+            .clipped()
+            .background(.regularMaterial) // ✨ dark blur background
+        }
+        .onChange(of: scrollID, initial: false) { _, newValue in
+            // ✨ background update according to scrollview offset
+            if let scrollID = newValue {
+                withAnimation {
+                    backgroundAnimal = animals[scrollID % animals.count]
                 }
             }
+        }
+        .onAppear {
+            animalsArray = [animals, animals, animals]
+            startAnimations()
+        }
+    }
+
+    func startAnimations() {
+        guard !isCardsVisible, !isTextsVisible, !isTitleVisible else { return }
+        startAnimation(delay: 0.5) { isCardsVisible = true }
+        startAnimation(delay: 0.75) { isTextsVisible = true }
+        startAnimation(delay: 0.8) { isTitleVisible = true }
+    }
+
+    private func startAnimation(delay: TimeInterval, block: @escaping () -> Void) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            withAnimation(.interpolatingSpring(duration: animationDuration)) { block() }
+        }
     }
 }
 
@@ -60,33 +110,32 @@ struct ContentView: View {
 
 private extension ContentView {
     /// Horizontal cards
-    var cardsView: some View {
+    @ViewBuilder var cardsView: some View {
+        let flattenAnimals = animalsArray.flatMap { $0.map { $0 } }
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 16) {
-                ForEach(0..<9) { i in
-                    Image(animals[i % animals.count].imageName)
+                ForEach(0..<flattenAnimals.count, id: \.self) { index in
+                    let animal = flattenAnimals[index]
+                    Image(animal.imageName)
                         .resizable()
                         .clipShape(.rect(cornerRadius: 16))
                         .aspectRatio(2.0 / 3.2, contentMode: .fill)
                         .frame(width: 200)
-                        .scrollTransition(
-                            axis: .horizontal
-                        ) { content, phase in
+                        .scrollTransition(axis: .horizontal) { content, phase in
                             content
-                                .rotationEffect(.degrees(phase.value * 2))
+                                .rotationEffect(.degrees(phase.value * 2.5))
                                 .offset(y: phase.isIdentity ? 0 : 16)
                         }
                         .shadow(radius: 5)
-                        .id(i)
+                        .id(animal)
                 }
             }
             .scrollTargetLayout()
         }
         .defaultScrollAnchor(.center)
         .scrollClipDisabled()
-        .scrollPosition(id: $scrollID)
+        .scrollPosition(id: $scrollID, anchor: .center)
         .safeAreaPadding(.horizontal, 20.0)
-        .transition(.opacity.combined(with: .move(edge: .top)))
     }
 
     /// Placeholder to hold cards size
@@ -95,38 +144,35 @@ private extension ContentView {
             .frame(height: 320)
     }
 
-    /// Titles with action button
-    var titlesView: some View {
-        VStack(spacing: 8) {
-            Text("Welcome to")
-                .bold()
-                .foregroundStyle(.white.opacity(0.5))
+    /// 'Welcome to'
+    var welcomeToText: some View {
+        Text("Welcome to")
+            .bold()
+            .foregroundStyle(.white.opacity(0.45))
+    }
 
-            Text("Animal Invites")
-                .font(.system(size: 40, weight: .bold))
-                .bold()
-                .foregroundStyle(.white)
+    /// Description
+    var descriptionText: some View {
+        Text("Create beautiful invitations for all your events. Anyone can receive invitations. Sending included with Animal+")
+            .font(.callout)
+            .foregroundStyle(.white.opacity(0.45))
+            .multilineTextAlignment(.center)
+    }
 
-            Text("Create beautiful invitations for all your events. Anyone can receive invitations. Sending included with Animal+")
-                .font(.callout)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.white.opacity(0.5))
-
-            Button {
-                print("create an event")
-            } label: {
-                Text("Create an Event")
-                    .fontWeight(.medium)
-                    .padding(.vertical)
-                    .padding(.horizontal, 32)
-                    .background(Color.white)
-                    .foregroundStyle(.black)
-                    .clipShape(Capsule())
-            }
-            .padding(.vertical, 40)
+    /// 'Create an Event'
+    var createEventButton: some View {
+        Button {
+            print("create an event")
+        } label: {
+            Text("Create an Event")
+                .fontWeight(.medium)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 32)
+                .background(Color.white)
+                .foregroundStyle(.black)
+                .clipShape(Capsule())
         }
-        .padding()
-        .transition(.opacity.combined(with: .offset(y: -30)))
+        .padding(.vertical, 40)
     }
 }
 
@@ -134,4 +180,5 @@ private extension ContentView {
 
 #Preview {
     ContentView()
+        .environment(\.colorScheme, .dark)
 }

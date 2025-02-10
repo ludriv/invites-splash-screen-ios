@@ -2,7 +2,7 @@
 //  InvitesSplashScreenApp.swift
 //  InvitesSplashScreen
 //
-//  Created by Ludovic Riviere on 07/02/2025.
+//  Created by Ludovic R. on 07/02/2025.
 //
 
 import SwiftUI
