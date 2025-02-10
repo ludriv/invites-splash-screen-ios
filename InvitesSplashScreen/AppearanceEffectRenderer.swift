@@ -4,8 +4,7 @@
 //
 //  Created by Ludovic R. on 07/02/2025.
 //
-//  Source & Inspiration:
-//  https://developer.apple.com/videos/play/wwdc2024/10151
+//  Copyright © 2024 Apple Inc. (https://developer.apple.com/documentation/swiftui/creating-visual-effects-with-swiftui)
 //
 
 import SwiftUI
