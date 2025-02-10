@@ -53,14 +53,11 @@ struct ContentView: View {
 
                         if isTitleVisible {
                             // ✨ Apple like title transition
-                            Text("Animal Invites")
+                            titleText("Animal Invites")
                                 .customAttribute(EmphasisAttribute())
-                                .font(.system(size: 40, weight: .bold))
-                                .foregroundStyle(.white)
                                 .transition(TextTransition(duration: animationDuration))
                         } else {
-                            Text("")
-                                .font(.system(size: 40, weight: .bold))
+                            titleText("")
                                 .opacity(0)
                         }
 
@@ -91,7 +88,11 @@ struct ContentView: View {
             startAnimations()
         }
     }
+}
 
+// MARK: - Animations
+
+private extension ContentView {
     func startAnimations() {
         guard !isCardsVisible, !isTextsVisible, !isTitleVisible else { return }
         startAnimation(delay: 0.5) { isCardsVisible = true }
@@ -99,7 +100,7 @@ struct ContentView: View {
         startAnimation(delay: 0.8) { isTitleVisible = true }
     }
 
-    private func startAnimation(delay: TimeInterval, block: @escaping () -> Void) {
+    func startAnimation(delay: TimeInterval, block: @escaping () -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             withAnimation(.interpolatingSpring(duration: animationDuration)) { block() }
         }
@@ -149,6 +150,13 @@ private extension ContentView {
         Text("Welcome to")
             .bold()
             .foregroundStyle(.white.opacity(0.45))
+    }
+
+    /// Title text
+    func titleText(_ text: String) -> Text {
+        Text(text)
+            .font(.system(size: 40, weight: .bold))
+            .foregroundStyle(.white)
     }
 
     /// Description
