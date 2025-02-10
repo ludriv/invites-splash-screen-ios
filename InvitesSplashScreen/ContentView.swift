@@ -117,18 +117,26 @@ private extension ContentView {
             HStack(spacing: 16) {
                 ForEach(0..<flattenAnimals.count, id: \.self) { index in
                     let animal = flattenAnimals[index]
-                    Image(animal.imageName)
-                        .resizable()
-                        .clipShape(.rect(cornerRadius: 16))
-                        .aspectRatio(2.0 / 3.2, contentMode: .fill)
-                        .frame(width: 200)
-                        .scrollTransition(axis: .horizontal) { content, phase in
-                            content
-                                .rotationEffect(.degrees(phase.value * 2.5))
-                                .offset(y: phase.isIdentity ? 0 : 16)
-                        }
-                        .shadow(radius: 5)
-                        .id(animal)
+                    ZStack(alignment: .topLeading) {
+                        Image(animal.imageName)
+                            .resizable()
+                            .clipShape(.rect(cornerRadius: 16))
+                        Text(animal.category)
+                            .font(.caption2)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                            .padding(10)
+                    }
+                    .aspectRatio(2.0 / 3.2, contentMode: .fill)
+                    .frame(width: 200)
+                    .scrollTransition(axis: .horizontal) { content, phase in
+                        content
+                            .rotationEffect(.degrees(phase.value * 2.5))
+                            .offset(y: phase.isIdentity ? 0 : 16)
+                    }
+                    .shadow(radius: 4)
+                    .id(animal)
                 }
             }
             .scrollTargetLayout()

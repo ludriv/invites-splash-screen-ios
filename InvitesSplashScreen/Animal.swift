@@ -15,4 +15,27 @@ enum Animal: String, CaseIterable {
     var imageName: String {
         "animal_\(rawValue)"
     }
+
+    var category: String {
+        switch self {
+        case .lemur: "Monkey"
+        case .parrot, .eagle: "Bird"
+        }
+    }
+
+    var name: String {
+        switch self {
+        case .lemur: "Lemur"
+        case .parrot: "Parrot"
+        case .eagle: "Eagle"
+        }
+    }
+
+    var place: String {
+        switch self {
+        case .lemur: "Madagascar"
+        case .parrot: "Central America"
+        case .eagle: "Arctic"
+        }
+    }
 }
